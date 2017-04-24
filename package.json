@@ -1,7 +1,7 @@
 {
   "name": "smallorange-data-loader",
   "version": "1.0.2",
-  "description": "Simple Data Loader.",
+  "description": "This package create batched queries to avoid make duplicate requests to the backend.",
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test ./node_modules/.bin/_mocha spec --recursive --watch --timeout 5000",
