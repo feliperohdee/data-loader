@@ -188,33 +188,32 @@ describe('index.js', () => {
             dataLoader.cache.set.restore();
         });
 
-        it('should throw if no args', done => {
-            dataLoader.get()
-                .subscribe(null, err => {
-                    expect(err.message).to.equal('args are missing.');
-                    done();
-                });
-        });
-
         it('should call buildCacheKey', done => {
-            dataLoader.get(0)
+            dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
-                    expect(dataLoader.buildCacheKey).to.have.been.calledWith(0);
+                    expect(dataLoader.buildCacheKey).to.have.been.calledWith(0, 'prefix.');
                 }, null, done);
         });
 
         it('should consult cache', done => {
-            dataLoader.get(0)
+            dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
-                    expect(dataLoader.cache.get).to.have.been.calledWith(0);
+                    expect(dataLoader.cache.get).to.have.been.calledWith('prefix.0');
+                }, null, done);
+        });
+
+        it('should not consult cache if no args', done => {
+            dataLoader.get()
+                .subscribe(() => {
+                    expect(dataLoader.cache.get).not.to.have.been.called;
                 }, null, done);
         });
 
         it('should return', done => {
-            dataLoader.get(0)
-                .merge(dataLoader.get(0))
-                .merge(dataLoader.get(1))
-                .merge(dataLoader.get(1))
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
                 .toArray()
                 .subscribe(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
@@ -222,39 +221,46 @@ describe('index.js', () => {
         });
 
         it('should return different Observables if different keys', () => {
-            expect(dataLoader.get(0)).not.to.equal(dataLoader.get(1));
+            expect(dataLoader.get(0, 'prefix.')).not.to.equal(dataLoader.get(1, 'prefix.'));
         });
 
         it('should return cached Observables if same key', () => {
-            expect(dataLoader.get(0)).to.equal(dataLoader.get(0));
+            expect(dataLoader.get(0, 'prefix.')).to.equal(dataLoader.get(0, 'prefix.'));
         });
 
         it('should set cache if not exists', done => {
-            dataLoader.get(0)
+            dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
                     expect(dataLoader.cache.set).to.have.been.calledOnce;
-                    expect(dataLoader.cache.set).to.have.been.calledWith(0);
+                    expect(dataLoader.cache.set).to.have.been.calledWith('prefix.0');
+                }, null, done);
+        });
+
+        it('should not set cache if no args', done => {
+            dataLoader.get()
+                .subscribe(() => {
+                    expect(dataLoader.cache.set).not.to.have.been.called;
                 }, null, done);
         });
 
         it('should not set cache if exists', done => {
-            dataLoader.get(0)
-                .merge(dataLoader.get(0))
-                .merge(dataLoader.get(1))
-                .merge(dataLoader.get(1))
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
                 .toArray()
                 .subscribe(() => {
                     expect(dataLoader.cache.set).to.have.been.calledTwice;
-                    expect(dataLoader.cache.set).to.have.been.calledWith(0);
-                    expect(dataLoader.cache.set).to.have.been.calledWith(1);
+                    expect(dataLoader.cache.set).to.have.been.calledWith('prefix.0');
+                    expect(dataLoader.cache.set).to.have.been.calledWith('prefix.1');
                 }, null, done);
         });
 
         it('should call schedule when queue goes from 0 to 1', done => {
-            dataLoader.get(0)
-                .merge(dataLoader.get(0))
-                .merge(dataLoader.get(1))
-                .merge(dataLoader.get(1))
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
                 .toArray()
                 .subscribe(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
@@ -262,10 +268,10 @@ describe('index.js', () => {
         });
 
         it('should call dispatch when queue goes from 0 to 1', done => {
-            dataLoader.get(0)
-                .merge(dataLoader.get(0))
-                .merge(dataLoader.get(1))
-                .merge(dataLoader.get(1))
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
                 .toArray()
                 .subscribe(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
@@ -292,10 +298,10 @@ describe('index.js', () => {
 
     describe('dispatch', () => {
         it('should call loader one per different item on the queue', done => {
-            dataLoader.get(0)
-                .merge(dataLoader.get(0))
-                .merge(dataLoader.get(1))
-                .merge(dataLoader.get(1))
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
                 .toArray()
                 .subscribe(() => {
                     expect(loader).to.have.been.calledTwice;
@@ -306,19 +312,27 @@ describe('index.js', () => {
     });
 
     describe('buldCacheKey', () => {
-        it('should build cahce key with primitives', () => {
+        it('should build cache key with primitives', () => {
             expect(dataLoader.buildCacheKey(0)).to.equal(0);
             expect(dataLoader.buildCacheKey('string')).to.equal('string');
             expect(dataLoader.buildCacheKey(true)).to.equal(true);
         });
 
-        it('should build cahce key with objects', () => {
+        it('should build cache key with objects', () => {
             expect(dataLoader.buildCacheKey(null)).to.equal('null');
             expect(dataLoader.buildCacheKey({
                 id: 0
             })).to.equal(JSON.stringify({
                 id: 0
             }));
+        });
+
+        it('should build cache key with prefix', () => {
+            expect(dataLoader.buildCacheKey({
+                id: 0
+            }, 'prefix.')).to.equal(`prefix.${JSON.stringify({
+                id: 0
+            })}`);
         });
     });
 
