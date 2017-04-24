@@ -2,7 +2,7 @@
 
 # Small Orange Data Loader
 
-This package create batched queries to avoid make duplicate requests to the backend. The sample below is self explanatory (we reduce 121 queries to just 4 using this package): 
+This package create cached queries to avoid make duplicate requests to the backend. The sample below is self explanatory (we reduce 121 queries to just 4 using this package): 
 
 ## Usage with GraphQL
 
