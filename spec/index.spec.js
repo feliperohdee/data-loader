@@ -93,9 +93,11 @@ const schema = new GraphQLSchema({
                     useLoader
                 }, context, info) => {
                     if (useLoader) {
-                        const userLoader = context.userLoader = new DataLoader(getUser);
+                        if (!context.userLoader) {
+                            context.userLoader = new DataLoader(getUser);
+                        }
 
-                        return userLoader.get(id)
+                        return context.userLoader.get(id)
                             .toPromise();
                     }
 
@@ -363,6 +365,74 @@ describe('index.js', () => {
                     expect(err.message).to.equal('GraphQLError: no user id');
                     done();
                 });
+        });
+
+        describe('many queries', () => {
+            it('should call many times', done => {
+                asyncGraph(`{
+                        u0: user(id: 0, useLoader: false) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u1: user(id: 1, useLoader: false) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u2: user(id: 2, useLoader: false) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u3: user(id: 3, useLoader: false) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                    }`)
+                    .subscribe(null, null, () => {
+                        expect(getUser.callCount).to.equal(16);
+                        done();
+                    });
+            });
+
+            it('should call getUser once per user', done => {
+                asyncGraph(`{
+                        u0: user(id: 0, useLoader: true) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u1: user(id: 1, useLoader: true) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u2: user(id: 2, useLoader: true) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                        u3: user(id: 3, useLoader: true) {
+                            name
+                            friends {
+                                name
+                            }
+                        }
+                    }`)
+                    .subscribe(null, null, () => {
+                        expect(getUser.callCount).to.equal(4);
+                        done();
+                    });
+            });
         });
     });
 });
