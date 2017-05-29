@@ -281,6 +281,56 @@ describe('index.js', () => {
         });
     });
 
+    describe.only('multiGet', () => {
+        beforeEach(() => {
+            sinon.spy(dataLoader, 'schedule');
+            sinon.spy(dataLoader, 'dispatch');
+        });
+
+        afterEach(() => {
+            dataLoader.schedule.restore();
+            dataLoader.dispatch.restore();
+        });
+
+        it('should return with objects', done => {
+            dataLoader.multiGet(0)
+                .merge(dataLoader.multiGet(0))
+                .merge(dataLoader.multiGet(1))
+                .merge(dataLoader.multiGet(1))
+                .toArray()
+                .subscribe(response => {
+                    expect(response).to.deep.equal([0, 0, 1, 1]);
+                }, null, done);
+        });
+
+        it('should return with objects as args', done => {
+            dataLoader.multiGet({
+                    id: 0
+                })
+                .merge(dataLoader.multiGet({
+                    id: 0
+                }))
+                .merge(dataLoader.multiGet({
+                    id: 1
+                }))
+                .merge(dataLoader.multiGet({
+                    id: 1
+                }))
+                .toArray()
+                .subscribe(response => {
+                    expect(response).to.deep.equal([{
+                        id: 0
+                    }, {
+                        id: 0
+                    }, {
+                        id: 1
+                    }, {
+                        id: 1
+                    }]);
+                }, null, done);
+        });
+    });
+
     describe('schedule', () => {
         beforeEach(() => {
             sinon.spy(process, 'nextTick');

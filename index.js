@@ -1,3 +1,7 @@
+const {
+    Observable
+} = require('rxjs');
+
 module.exports = class DataLoader {
     constructor(loader) {
         if (typeof loader !== 'function') {
@@ -39,6 +43,41 @@ module.exports = class DataLoader {
         return observable;
     }
 
+    multiGet(args) {
+        if (!this.argsCollection) {
+            this.argsCollection = [];
+        }
+
+        this.argsCollection.push(args);
+
+        if (this.argsCollection.length === 1) {
+            const observable = Observable.create(subscriber => {
+                    // remove duplicates
+                    this.argsCollection = this.argsCollection
+                        .filter((filterItem, index) => {
+                            const existentIndex = this.argsCollection.findIndex(findItem => JSON.stringify(filterItem) === JSON.stringify(findItem));
+
+                            return existentIndex === index;
+                        });
+
+                    return this.loader(this.argsCollection)
+                        .subscribe(subscriber);
+                })
+                .publishReplay();
+
+            this.queue = [observable];
+            this.schedule(() => this.dispatch());
+        }
+
+        return this.queue[0]
+            .map(response => {
+                const stringifiedArgs = JSON.stringify(args);
+                const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
+
+                return response[responseIndex];
+            });
+    }
+
     schedule(fn) {
         process.nextTick(fn);
     }
@@ -56,10 +95,10 @@ module.exports = class DataLoader {
         let cacheKey = args;
 
         if (typeof args === 'object') {
-            cacheKey = JSON.stringify(args)
+            cacheKey = JSON.stringify(args);
         }
 
-        if(prefix){
+        if (prefix) {
             cacheKey = `${prefix}${cacheKey}`;
         }
 
