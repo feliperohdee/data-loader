@@ -54,8 +54,8 @@ module.exports = class DataLoader {
             const observable = Observable.create(subscriber => {
                     // remove duplicates
                     this.argsCollection = this.argsCollection
-                        .filter((filterItem, index) => {
-                            const existentIndex = this.argsCollection.findIndex(findItem => JSON.stringify(filterItem) === JSON.stringify(findItem));
+                        .filter((filterItem, index, self) => {
+                            const existentIndex = self.findIndex(findItem => JSON.stringify(filterItem) === JSON.stringify(findItem));
 
                             return existentIndex === index;
                         });
