@@ -75,6 +75,9 @@ module.exports = class DataLoader {
                 const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
 
                 return response[responseIndex];
+            })
+            .do(null, null, () => {
+                this.argsCollection = null;
             });
     }
 

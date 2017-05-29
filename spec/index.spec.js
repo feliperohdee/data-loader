@@ -343,6 +343,17 @@ describe('index.js', () => {
                 }, null, done);
         });
 
+        it('should null argsCollection', done => {
+            dataLoader.multiGet(0)
+                .merge(dataLoader.multiGet(0))
+                .merge(dataLoader.multiGet(1))
+                .merge(dataLoader.multiGet(1))
+                .toArray()
+                .subscribe(() => {
+                    expect(dataLoader.argsCollection).to.be.null;
+                }, null, done);
+        });
+
         it('should call loader', done => {
             dataLoader.multiGet(0)
                 .merge(dataLoader.multiGet(0))
