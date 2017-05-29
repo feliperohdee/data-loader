@@ -222,6 +222,19 @@ describe('index.js', () => {
                 }, null, done);
         });
 
+        it('should call loader', done => {
+            dataLoader.get(0, 'prefix.')
+                .merge(dataLoader.get(0, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .merge(dataLoader.get(1, 'prefix.'))
+                .toArray()
+                .subscribe(response => {
+                    expect(loader).to.have.been.callCount(2);
+                    expect(loader).to.have.been.calledWith(0);
+                    expect(loader).to.have.been.calledWith(1);
+                }, null, done);
+        });
+
         it('should return different Observables if different keys', () => {
             expect(dataLoader.get(0, 'prefix.')).not.to.equal(dataLoader.get(1, 'prefix.'));
         });
@@ -281,7 +294,7 @@ describe('index.js', () => {
         });
     });
 
-    describe.only('multiGet', () => {
+    describe('multiGet', () => {
         beforeEach(() => {
             sinon.spy(dataLoader, 'schedule');
             sinon.spy(dataLoader, 'dispatch');
@@ -292,7 +305,7 @@ describe('index.js', () => {
             dataLoader.dispatch.restore();
         });
 
-        it('should return with objects', done => {
+        it('should return', done => {
             dataLoader.multiGet(0)
                 .merge(dataLoader.multiGet(0))
                 .merge(dataLoader.multiGet(1))
@@ -303,7 +316,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should return with objects as args', done => {
+        it('should return with objects args', done => {
             dataLoader.multiGet({
                     id: 0
                 })
@@ -327,6 +340,40 @@ describe('index.js', () => {
                     }, {
                         id: 1
                     }]);
+                }, null, done);
+        });
+
+        it('should call loader', done => {
+            dataLoader.multiGet(0)
+                .merge(dataLoader.multiGet(0))
+                .merge(dataLoader.multiGet(1))
+                .merge(dataLoader.multiGet(1))
+                .toArray()
+                .subscribe(response => {
+                    expect(loader).to.have.been.calledOnce;
+                    expect(loader).to.have.been.calledWith([0, 1]);
+                }, null, done);
+        });
+
+        it('should call schedule', done => {
+            dataLoader.multiGet(0)
+                .merge(dataLoader.multiGet(0))
+                .merge(dataLoader.multiGet(1))
+                .merge(dataLoader.multiGet(1))
+                .toArray()
+                .subscribe(() => {
+                    expect(dataLoader.schedule).to.have.been.calledOnce;
+                }, null, done);
+        });
+
+        it('should call dispatch', done => {
+            dataLoader.multiGet(0)
+                .merge(dataLoader.multiGet(0))
+                .merge(dataLoader.multiGet(1))
+                .merge(dataLoader.multiGet(1))
+                .toArray()
+                .subscribe(() => {
+                    expect(dataLoader.dispatch).to.have.been.calledOnce;
                 }, null, done);
         });
     });
