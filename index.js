@@ -1,6 +1,11 @@
 const {
     Observable
 } = require('rxjs');
+const {
+    map,
+    publishReplay,
+    tap
+} = require('rxjs/operators');
 
 module.exports = class DataLoader {
     constructor(loader) {
@@ -28,7 +33,9 @@ module.exports = class DataLoader {
         }
 
         const observable = this.loader(args)
-            .publishReplay();
+            .pipe(
+                publishReplay()
+            );
 
         this.queue.push(observable);
 
@@ -51,7 +58,7 @@ module.exports = class DataLoader {
         this.argsCollection.push(args);
 
         if (this.argsCollection.length === 1) {
-            const observable = Observable.create(subscriber => {
+            const observable = new Observable(subscriber => {
                     // remove duplicates
                     this.argsCollection = this.argsCollection
                         .filter((filterItem, index, self) => {
@@ -63,22 +70,26 @@ module.exports = class DataLoader {
                     return this.loader(this.argsCollection)
                         .subscribe(subscriber);
                 })
-                .publishReplay();
+                .pipe(
+                    publishReplay()
+                );
 
             this.queue = [observable];
             this.schedule(() => this.dispatch());
         }
 
         return this.queue[0]
-            .map(response => {
-                const stringifiedArgs = JSON.stringify(args);
-                const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
-
-                return response[responseIndex];
-            })
-            .do(null, null, () => {
-                this.argsCollection = null;
-            });
+            .pipe(
+                map(response => {
+                    const stringifiedArgs = JSON.stringify(args);
+                    const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
+    
+                    return response[responseIndex];
+                }),
+                tap(null, null, () => {
+                    this.argsCollection = null;
+                })
+            );
     }
 
     schedule(fn) {
@@ -89,8 +100,7 @@ module.exports = class DataLoader {
         while (this.queue.length > 0) {
             const observable = this.queue.shift();
 
-            observable
-                .connect();
+            observable.connect();
         }
     }
 
@@ -107,4 +117,4 @@ module.exports = class DataLoader {
 
         return cacheKey;
     }
-}
+};

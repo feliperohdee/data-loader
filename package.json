@@ -1,28 +1,39 @@
 {
-  "name": "smallorange-data-loader",
-  "version": "1.0.6",
-  "description": "This package create cached queries to avoid make duplicate requests to the backend.",
-  "main": "index.js",
-  "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/_mocha spec --recursive --watch --timeout 5000",
-    "coverage": "NODE_ENV=test ./node_modules/.bin/istanbul cover -x spec/** ./node_modules/.bin/_mocha -- 'spec' --recursive --timeout 5000",
-    "deploy": "npm version patch -m 'Bump %s' && git push origin master && npm publish"
-  },
-  "author": "Felipe Rohde",
-  "license": "ISC",
-  "dependencies": {},
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "graphql": "^0.9.3",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
-    "rxjs": "^5.3.0",
-    "sinon": "^1.17.7",
-    "sinon-chai": "^2.8.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/feliperohdee/smallorange-data-loader"
-  },
-  "homepage": "https://smallorange.co"
+    "name": "data-loader",
+    "version": "1.1.0",
+    "description": "This package create cached queries to avoid make duplicate requests to the backend.",
+    "main": "index.js",
+    "scripts": {
+        "coverage": "rm -rf coverage; NODE_ENV=test nyc ./node_modules/.bin/_mocha *.spec.js --recursive --timeout 5000; rm -rf .nyc_output",
+        "deploy": "npm version patch -m 'Bump %s' && git push origin master && npm publish",
+        "eslint": "eslint . --ext .js",
+        "test": "NODE_ENV=test ./node_modules/.bin/_mocha *.spec.js --recursive --watch --timeout 5000"
+    },
+    "author": "Felipe Rohde",
+    "license": "ISC",
+    "dependencies": {},
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "eslint": "^6.6.0",
+        "graphql": "^14.5.8",
+        "mocha": "^6.2.2",
+        "nyc": "^14.1.1",
+        "rxjs": "^6.5.3",
+        "sinon": "^7.5.0",
+        "sinon-chai": "^3.3.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/feliperohdee/data-loader"
+    },
+    "nyc": {
+        "all": true,
+        "reporter": "lcov",
+        "exclude": [
+            ".eslintrc.js",
+            "*.spec.js",
+            "**/*.spec.js",
+            "testing/**"
+        ]
+    }
 }

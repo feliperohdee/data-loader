@@ -1,11 +1,19 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const DataLoader = require('../');
+const DataLoader = require('./');
 
 const {
+    from,
     Observable
 } = require('rxjs');
+const {
+    merge,
+    mergeMap,
+    share,
+    tap,
+    toArray
+} = require('rxjs/operators');
 const {
     graphql,
     GraphQLSchema,
@@ -41,14 +49,17 @@ const friendsOf = [
     [0, 1, 2]
 ];
 
-const getUser = sinon.spy(id => Observable.create(subscriber => {
-    if (!users[id]) {
-        subscriber.error(new Error('no user id'));
-    }
+const getUser = sinon.spy(id => new Observable(subscriber => {
+        if (!users[id]) {
+            subscriber.error(new Error('no user id'));
+        }
 
-    subscriber.next(users[id]);
-    subscriber.complete();
-}).share());
+        subscriber.next(users[id]);
+        subscriber.complete();
+    })
+    .pipe(
+        share()
+    ));
 
 const User = new GraphQLObjectType({
     name: 'User',
@@ -65,9 +76,11 @@ const User = new GraphQLObjectType({
                     userLoader
                 } = context;
 
-                return Observable.from(friendsOf[id])
-                    .mergeMap(id => userLoader ? userLoader.get(id) : getUser(id))
-                    .toArray()
+                return from(friendsOf[id])
+                    .pipe(
+                        mergeMap(id => userLoader ? userLoader.get(id) : getUser(id)),
+                        toArray()
+                    )
                     .toPromise();
             }
         }
@@ -109,12 +122,14 @@ const schema = new GraphQLSchema({
     })
 });
 
-const asyncGraph = requestString => Observable.fromPromise(graphql(schema, requestString, {}, {}))
-    .do(response => {
-        if (response.errors) {
-            throw new Error(response.errors.join());
-        }
-    });
+const asyncGraph = requestString => from(graphql(schema, requestString, {}, {}))
+    .pipe(
+        tap(response => {
+            if (response.errors) {
+                throw new Error(response.errors.join());
+            }
+        })
+    );
 
 const query = (id, useLoader = false) => `{
     user(id: ${id}, useLoader: ${useLoader}) {
@@ -213,10 +228,12 @@ describe('index.js', () => {
 
         it('should return', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
                 }, null, done);
@@ -224,10 +241,12 @@ describe('index.js', () => {
 
         it('should call loader', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(response => {
                     expect(loader).to.have.been.callCount(2);
                     expect(loader).to.have.been.calledWith(0);
@@ -260,10 +279,12 @@ describe('index.js', () => {
 
         it('should not set cache if exists', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.cache.set).to.have.been.calledTwice;
                     expect(dataLoader.cache.set).to.have.been.calledWith('prefix.0');
@@ -273,10 +294,12 @@ describe('index.js', () => {
 
         it('should call schedule when queue goes from 0 to 1', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
                 }, null, done);
@@ -284,10 +307,12 @@ describe('index.js', () => {
 
         it('should call dispatch when queue goes from 0 to 1', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
                 }, null, done);
@@ -307,10 +332,12 @@ describe('index.js', () => {
 
         it('should return', done => {
             dataLoader.multiGet(0)
-                .merge(dataLoader.multiGet(0))
-                .merge(dataLoader.multiGet(1))
-                .merge(dataLoader.multiGet(1))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet(0)),
+                    merge(dataLoader.multiGet(1)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
                 .subscribe(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
                 }, null, done);
@@ -320,16 +347,18 @@ describe('index.js', () => {
             dataLoader.multiGet({
                     id: 0
                 })
-                .merge(dataLoader.multiGet({
-                    id: 0
-                }))
-                .merge(dataLoader.multiGet({
-                    id: 1
-                }))
-                .merge(dataLoader.multiGet({
-                    id: 1
-                }))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet({
+                        id: 0
+                    })),
+                    merge(dataLoader.multiGet({
+                        id: 1
+                    })),
+                    merge(dataLoader.multiGet({
+                        id: 1
+                    })),
+                    toArray()
+                )
                 .subscribe(response => {
                     expect(response).to.deep.equal([{
                         id: 0
@@ -345,10 +374,12 @@ describe('index.js', () => {
 
         it('should null argsCollection', done => {
             dataLoader.multiGet(0)
-                .merge(dataLoader.multiGet(0))
-                .merge(dataLoader.multiGet(1))
-                .merge(dataLoader.multiGet(1))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet(0)),
+                    merge(dataLoader.multiGet(1)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.argsCollection).to.be.null;
                 }, null, done);
@@ -356,10 +387,12 @@ describe('index.js', () => {
 
         it('should call loader', done => {
             dataLoader.multiGet(0)
-                .merge(dataLoader.multiGet(0))
-                .merge(dataLoader.multiGet(1))
-                .merge(dataLoader.multiGet(1))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet(0)),
+                    merge(dataLoader.multiGet(1)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
                 .subscribe(response => {
                     expect(loader).to.have.been.calledOnce;
                     expect(loader).to.have.been.calledWith([0, 1]);
@@ -368,10 +401,12 @@ describe('index.js', () => {
 
         it('should call schedule', done => {
             dataLoader.multiGet(0)
-                .merge(dataLoader.multiGet(0))
-                .merge(dataLoader.multiGet(1))
-                .merge(dataLoader.multiGet(1))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet(0)),
+                    merge(dataLoader.multiGet(1)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
                 }, null, done);
@@ -379,10 +414,12 @@ describe('index.js', () => {
 
         it('should call dispatch', done => {
             dataLoader.multiGet(0)
-                .merge(dataLoader.multiGet(0))
-                .merge(dataLoader.multiGet(1))
-                .merge(dataLoader.multiGet(1))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.multiGet(0)),
+                    merge(dataLoader.multiGet(1)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
                 }, null, done);
@@ -409,10 +446,12 @@ describe('index.js', () => {
     describe('dispatch', () => {
         it('should call loader one per different item on the queue', done => {
             dataLoader.get(0, 'prefix.')
-                .merge(dataLoader.get(0, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .merge(dataLoader.get(1, 'prefix.'))
-                .toArray()
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
                 .subscribe(() => {
                     expect(loader).to.have.been.calledTwice;
                     expect(loader).to.have.been.calledWith(0);
@@ -448,7 +487,7 @@ describe('index.js', () => {
 
     describe('bdd with graphQl', () => {
         beforeEach(() => {
-            getUser.reset();
+            getUser.resetHistory();
         });
 
         it('should call getUser many times', done => {
@@ -470,7 +509,7 @@ describe('index.js', () => {
         it('should handle errors', done => {
             asyncGraph(query(4))
                 .subscribe(null, err => {
-                    expect(err.message).to.equal('GraphQLError: no user id');
+                    expect(err.message).to.contains('no user id');
                     done();
                 });
         });
