@@ -1,6 +1,4 @@
-[![CircleCI](https://circleci.com/gh/feliperohdee/smallorange-data-loader.svg?style=svg)](https://circleci.com/gh/feliperohdee/smallorange-data-loader)
-
-# Small Orange Data Loader
+# Data Loader
 
 This package create cached queries to avoid make duplicate requests to the backend. The sample below is self explanatory (we reduce 121 queries to just 4 using this package): 
 
@@ -27,14 +25,17 @@ This package create cached queries to avoid make duplicate requests to the backe
 		    [0, 1, 2]
 		];
 
-		const getUser = sinon.spy(id => Observable.create(subscriber => {
+		const getUser = sinon.spy(id => new Observable(subscriber => {
 		    if (!users[id]) {
 		        subscriber.error(new Error('no user id'));
 		    }
 
 		    subscriber.next(users[id]);
 		    subscriber.complete();
-		}).share());
+		})
+		.pipe(
+			share()
+		));
 
 		const User = new GraphQLObjectType({
 		    name: 'User',
@@ -51,9 +52,11 @@ This package create cached queries to avoid make duplicate requests to the backe
 		                    userLoader
 		                } = context;
 
-		                return Observable.from(friendsOf[id])
-		                    .mergeMap(id => userLoader ? userLoader.get(id) : getUser(id))
-		                    .toArray()
+		                return from(friendsOf[id])
+							.pipe(
+								mergeMap(id => userLoader ? userLoader.get(id) : getUser(id)).
+		                    	toArray()
+							)
 		                    .toPromise();
 		            }
 		        }
@@ -93,12 +96,14 @@ This package create cached queries to avoid make duplicate requests to the backe
 		    })
 		});
 
-		const asyncGraph = requestString => Observable.fromPromise(graphql(schema, requestString, {}, {}))
-		    .do(response => {
-		        if (response.errors) {
-		            throw new Error(response.errors.join());
-		        }
-		    });
+		const asyncGraph = requestString => from(graphql(schema, requestString, {}, {}))
+			.pipe(
+				tap(response => {
+					if (response.errors) {
+						throw new Error(response.errors.join());
+					}
+				})
+			);
 
 		const query = (id, useLoader = false) => `{
 		    user(id: ${id}, useLoader: ${useLoader}) {
