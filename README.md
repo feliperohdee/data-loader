@@ -1,4 +1,4 @@
-# Data Loader
+# RXJS Data Loader
 
 This package create cached queries to avoid make duplicate requests to the backend. The sample below is self explanatory (we reduce 121 queries to just 4 using this package): 
 
