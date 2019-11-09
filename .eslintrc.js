@@ -26,6 +26,7 @@ module.exports = {
         'eqeqeq': ['warn', 'allow-null'],
         'new-parens': 'warn',
         'no-array-constructor': 'warn',
+        'no-buffer-constructor': 'warn',
         'no-caller': 'warn',
         'no-cond-assign': ['warn', 'except-parens'],
         'no-const-assign': 'warn',
