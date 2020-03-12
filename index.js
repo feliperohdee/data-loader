@@ -1,11 +1,5 @@
-const {
-    Observable
-} = require('rxjs');
-const {
-    map,
-    publishReplay,
-    tap
-} = require('rxjs/operators');
+const rx = require('rxjs');
+const rxop = require('rxjs/operators');
 
 module.exports = class DataLoader {
     constructor(loader) {
@@ -34,7 +28,7 @@ module.exports = class DataLoader {
 
         const observable = this.loader(args)
             .pipe(
-                publishReplay()
+                rxop.publishReplay()
             );
 
         this.queue.push(observable);
@@ -58,7 +52,7 @@ module.exports = class DataLoader {
         this.argsCollection.push(args);
 
         if (this.argsCollection.length === 1) {
-            const observable = new Observable(subscriber => {
+            const observable = new rx.Observable(subscriber => {
                     // remove duplicates
                     this.argsCollection = this.argsCollection
                         .filter((filterItem, index, self) => {
@@ -71,7 +65,7 @@ module.exports = class DataLoader {
                         .subscribe(subscriber);
                 })
                 .pipe(
-                    publishReplay()
+                    rxop.publishReplay()
                 );
 
             this.queue = [observable];
@@ -80,13 +74,13 @@ module.exports = class DataLoader {
 
         return this.queue[0]
             .pipe(
-                map(response => {
+                rxop.map(response => {
                     const stringifiedArgs = JSON.stringify(args);
                     const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
     
                     return response[responseIndex];
                 }),
-                tap(null, null, () => {
+                rxop.tap(null, null, () => {
                     this.argsCollection = null;
                 })
             );
