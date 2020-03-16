@@ -343,6 +343,13 @@ describe('index.js', () => {
                 }, null, done);
         });
 
+        it('should return with args array', done => {
+            dataLoader.multiGet([0, 0, 1, 1])
+                .subscribe(response => {
+                    expect(response).to.deep.equal([0, 0, 1, 1]);
+                }, null, done);
+        });
+
         it('should return with objects args', done => {
             dataLoader.multiGet({
                     id: 0
@@ -385,7 +392,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call loader', done => {
+        it('should call loader once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     merge(dataLoader.multiGet(0)),
@@ -399,7 +406,15 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call schedule', done => {
+        it('should call loader once with args array', done => {
+            dataLoader.multiGet([0, 0, 1, 1])
+                .subscribe(response => {
+                    expect(loader).to.have.been.calledOnce;
+                    expect(loader).to.have.been.calledWith([0, 1]);
+                }, null, done);
+        });
+
+        it('should call schedule once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     merge(dataLoader.multiGet(0)),
@@ -412,7 +427,14 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call dispatch', done => {
+        it('should call schedule once with args array', done => {
+            dataLoader.multiGet([0, 0, 1, 1])
+                .subscribe(() => {
+                    expect(dataLoader.schedule).to.have.been.calledOnce;
+                }, null, done);
+        });
+
+        it('should call dispatch once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     merge(dataLoader.multiGet(0)),
@@ -420,6 +442,13 @@ describe('index.js', () => {
                     merge(dataLoader.multiGet(1)),
                     toArray()
                 )
+                .subscribe(() => {
+                    expect(dataLoader.dispatch).to.have.been.calledOnce;
+                }, null, done);
+        });
+
+        it('should call dispatch once with args array', done => {
+            dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
                 }, null, done);

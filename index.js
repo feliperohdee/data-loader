@@ -49,17 +49,24 @@ module.exports = class DataLoader {
             this.argsCollection = [];
         }
 
+        if (Array.isArray(args)) {
+            return rx.forkJoin(args.map(arg => {
+                return this.multiGet(arg);
+            }));
+        }
+
         this.argsCollection.push(args);
 
         if (this.argsCollection.length === 1) {
             const observable = new rx.Observable(subscriber => {
                     // remove duplicates
-                    this.argsCollection = this.argsCollection
-                        .filter((filterItem, index, self) => {
-                            const existentIndex = self.findIndex(findItem => JSON.stringify(filterItem) === JSON.stringify(findItem));
-
-                            return existentIndex === index;
+                    this.argsCollection = this.argsCollection.filter((filterItem, index, self) => {
+                        const existentIndex = self.findIndex(findItem => {
+                            return JSON.stringify(filterItem) === JSON.stringify(findItem);
                         });
+
+                        return existentIndex === index;
+                    });
 
                     return this.loader(this.argsCollection)
                         .subscribe(subscriber);
@@ -76,8 +83,10 @@ module.exports = class DataLoader {
             .pipe(
                 rxop.map(response => {
                     const stringifiedArgs = JSON.stringify(args);
-                    const responseIndex = this.argsCollection.findIndex(item => JSON.stringify(item) === stringifiedArgs);
-    
+                    const responseIndex = this.argsCollection.findIndex(item => {
+                        return JSON.stringify(item) === stringifiedArgs;
+                    });
+
                     return response[responseIndex];
                 }),
                 rxop.tap(null, null, () => {
