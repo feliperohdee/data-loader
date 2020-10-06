@@ -7,6 +7,7 @@ module.exports = class DataLoader {
             throw new Error('loader might be a function.');
         }
 
+        this.argsCollection = [];
         this.loader = loader;
         this.queue = [];
         this.cache = new Map();
@@ -45,10 +46,6 @@ module.exports = class DataLoader {
     }
 
     multiGet(args) {
-        if (!this.argsCollection) {
-            this.argsCollection = [];
-        }
-
         if (Array.isArray(args)) {
             return rx.forkJoin(args.map(arg => {
                 return this.multiGet(arg);
@@ -60,7 +57,7 @@ module.exports = class DataLoader {
         if (this.argsCollection.length === 1) {
             const observable = new rx.Observable(subscriber => {
                     // remove duplicates
-                    this.argsCollection = this.argsCollection.filter((filterItem, index, self) => {
+                    const argsCollection = this.argsCollection.filter((filterItem, index, self) => {
                         const existentIndex = self.findIndex(findItem => {
                             return JSON.stringify(filterItem) === JSON.stringify(findItem);
                         });
@@ -68,7 +65,17 @@ module.exports = class DataLoader {
                         return existentIndex === index;
                     });
 
-                    return this.loader(this.argsCollection)
+                    this.argsCollection = [];
+
+                    return this.loader(argsCollection)
+                        .pipe(
+                            rxop.map(response => {
+                                return {
+                                    argsCollection,
+                                    response
+                                };
+                            })
+                        )
                         .subscribe(subscriber);
                 })
                 .pipe(
@@ -81,16 +88,16 @@ module.exports = class DataLoader {
 
         return this.queue[0]
             .pipe(
-                rxop.map(response => {
+                rxop.map(({
+                    argsCollection,
+                    response
+                }) => {
                     const stringifiedArgs = JSON.stringify(args);
-                    const responseIndex = this.argsCollection.findIndex(item => {
+                    const responseIndex = argsCollection.findIndex(item => {
                         return JSON.stringify(item) === stringifiedArgs;
                     });
 
                     return response[responseIndex];
-                }),
-                rxop.tap(null, null, () => {
-                    this.argsCollection = null;
                 })
             );
     }

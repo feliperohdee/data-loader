@@ -379,7 +379,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should null argsCollection', done => {
+        it('should empty argsCollection', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     merge(dataLoader.multiGet(0)),
@@ -388,7 +388,7 @@ describe('index.js', () => {
                     toArray()
                 )
                 .subscribe(() => {
-                    expect(dataLoader.argsCollection).to.be.null;
+                    expect(dataLoader.argsCollection).to.deep.equal([]);
                 }, null, done);
         });
 
@@ -403,6 +403,21 @@ describe('index.js', () => {
                 .subscribe(response => {
                     expect(loader).to.have.been.calledOnce;
                     expect(loader).to.have.been.calledWith([0, 1]);
+                }, null, done);
+        });
+        
+        it('should call loader twice', done => {
+            dataLoader.multiGet(0)
+                .pipe(
+                    mergeMap(() => {
+                        return dataLoader.multiGet(1);
+                    }),
+                    toArray()
+                )
+                .subscribe(response => {
+                    expect(loader).to.have.been.calledTwice;
+                    expect(loader).to.have.been.calledWith([0]);
+                    expect(loader).to.have.been.calledWith([1]);
                 }, null, done);
         });
 
