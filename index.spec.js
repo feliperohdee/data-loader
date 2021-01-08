@@ -186,6 +186,10 @@ describe('index.js', () => {
         it('should have a cache', () => {
             expect(dataLoader.cache).to.be.a('Map');
         });
+        
+        it('should have a cache', () => {
+            expect(dataLoader.scheduler).to.equal(setTimeout);
+        });
     });
 
     describe('get', () => {
@@ -472,18 +476,18 @@ describe('index.js', () => {
 
     describe('schedule', () => {
         beforeEach(() => {
-            sinon.spy(process, 'nextTick');
+            sinon.spy(dataLoader, 'scheduler');
         });
 
         afterEach(() => {
-            process.nextTick.restore();
+            dataLoader.scheduler.restore();
         });
 
-        it('should call process.nextTick', () => {
+        it('should call scheduler', () => {
             const fn = () => null;
 
             dataLoader.schedule(fn);
-            expect(process.nextTick).to.have.been.calledWith(fn);
+            expect(dataLoader.scheduler).to.have.been.calledWith(fn);
         });
     });
 

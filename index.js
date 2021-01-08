@@ -11,6 +11,7 @@ module.exports = class DataLoader {
         this.loader = loader;
         this.queue = [];
         this.cache = new Map();
+        this.scheduler = setTimeout;
     }
 
     get(args, cachePrefix = null) {
@@ -103,7 +104,7 @@ module.exports = class DataLoader {
     }
 
     schedule(fn) {
-        process.nextTick(fn);
+        this.scheduler(fn);
     }
 
     dispatch() {
