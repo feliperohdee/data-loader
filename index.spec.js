@@ -187,8 +187,8 @@ describe('index.js', () => {
             expect(dataLoader.cache).to.be.a('Map');
         });
         
-        it('should have a cache', () => {
-            expect(dataLoader.scheduler).to.equal(process.nextTick);
+        it('should have a scheduler', () => {
+            expect(dataLoader.scheduler).to.equal(setImmediate);
         });
     });
 

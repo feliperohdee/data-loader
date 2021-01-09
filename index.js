@@ -11,7 +11,7 @@ module.exports = class DataLoader {
         this.loader = loader;
         this.queue = [];
         this.cache = new Map();
-        this.scheduler = process.nextTick;
+        this.scheduler = setImmediate;
     }
 
     get(args, cachePrefix = null) {
