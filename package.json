@@ -1,6 +1,6 @@
 {
     "name": "rxjs-data-loader",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "This package create cached queries to avoid make duplicate requests to the backend.",
     "main": "index.js",
     "scripts": {

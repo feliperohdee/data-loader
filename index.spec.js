@@ -188,7 +188,7 @@ describe('index.js', () => {
         });
         
         it('should have a cache', () => {
-            expect(dataLoader.scheduler).to.equal(setTimeout);
+            expect(dataLoader.scheduler).to.equal(process.nextTick);
         });
     });
 
@@ -301,6 +301,30 @@ describe('index.js', () => {
                 .pipe(
                     merge(dataLoader.get(0, 'prefix.')),
                     merge(dataLoader.get(1, 'prefix.')),
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
+                .subscribe(() => {
+                    expect(dataLoader.schedule).to.have.been.calledOnce;
+                }, null, done);
+        });
+        
+        it('should not call schedule if schedule = false', done => {
+            dataLoader.get(0, 'prefix.', false)
+                .pipe(
+                    merge(dataLoader.get(1, 'prefix.')),
+                    toArray()
+                )
+                .subscribe(() => {
+                    expect(dataLoader.schedule).to.have.been.calledOnce;
+                }, null, done);
+        });
+        
+        it('should not call schedule if schedule = false and cached', done => {
+            dataLoader.get(0, 'prefix.', false)
+                .pipe(
+                    merge(dataLoader.get(0, 'prefix.', false)),
+                    merge(dataLoader.get(1, 'prefix.', false)),
                     merge(dataLoader.get(1, 'prefix.')),
                     toArray()
                 )
@@ -449,6 +473,19 @@ describe('index.js', () => {
         it('should call schedule once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(() => {
+                    expect(dataLoader.schedule).to.have.been.calledOnce;
+                }, null, done);
+        });
+
+        it('should not call schedule if schedule = false', done => {
+            dataLoader.multiGet(0, false)
+                .pipe(
+                    merge(dataLoader.multiGet(0, false)),
+                    merge(dataLoader.multiGet(1, false)),
+                    merge(dataLoader.multiGet(1)),
+                    toArray()
+                )
+                .subscribe(response => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
                 }, null, done);
         });

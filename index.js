@@ -11,13 +11,25 @@ module.exports = class DataLoader {
         this.loader = loader;
         this.queue = [];
         this.cache = new Map();
-        this.scheduler = setTimeout;
+        this.calls = 0;
+        this.times = 1;
+        this.scheduler = process.nextTick;
     }
 
-    get(args, cachePrefix = null) {
+    get(args, cachePrefix = null, schedule = true) {
         let shouldCache = args !== undefined;
         let cacheKey;
         let cached;
+
+        this.calls += 1;
+
+        if (!schedule) {
+            this.times += 1;
+        }
+
+        if (this.calls === this.times) {
+            this.schedule(() => this.dispatch());
+        }
 
         if (shouldCache) {
             cacheKey = this.buildCacheKey(args, cachePrefix);
@@ -35,10 +47,6 @@ module.exports = class DataLoader {
 
         this.queue.push(observable);
 
-        if (this.queue.length === 1) {
-            this.schedule(() => this.dispatch());
-        }
-
         if (shouldCache) {
             this.cache.set(cacheKey, observable);
         }
@@ -46,14 +54,19 @@ module.exports = class DataLoader {
         return observable;
     }
 
-    multiGet(args) {
+    multiGet(args, schedule = true) {
         if (Array.isArray(args)) {
             return rx.forkJoin(args.map(arg => {
-                return this.multiGet(arg);
+                return this.multiGet(arg, schedule);
             }));
         }
 
         this.argsCollection.push(args);
+        this.calls += 1;
+
+        if (!schedule) {
+            this.times += 1;
+        }
 
         if (this.argsCollection.length === 1) {
             const observable = new rx.Observable(subscriber => {
@@ -84,6 +97,9 @@ module.exports = class DataLoader {
                 );
 
             this.queue = [observable];
+        }
+
+        if (this.calls === this.times) {
             this.schedule(() => this.dispatch());
         }
 
@@ -108,6 +124,9 @@ module.exports = class DataLoader {
     }
 
     dispatch() {
+        this.calls = 0;
+        this.times = 1;
+
         while (this.queue.length > 0) {
             const observable = this.queue.shift();
 
