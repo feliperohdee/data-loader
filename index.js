@@ -1,5 +1,4 @@
-const rx = require('rxjs');
-const rxop = require('rxjs/operators');
+const rx = require('./rx');
 
 module.exports = class DataLoader {
     constructor(loader) {
@@ -30,7 +29,7 @@ module.exports = class DataLoader {
 
         const observable = this.loader(args)
             .pipe(
-                rxop.publishReplay()
+                rx.publishReplay()
             );
 
         this.queue.push(observable);
@@ -70,7 +69,7 @@ module.exports = class DataLoader {
 
                     return this.loader(argsCollection)
                         .pipe(
-                            rxop.map(response => {
+                            rx.map(response => {
                                 return {
                                     argsCollection,
                                     response
@@ -80,7 +79,7 @@ module.exports = class DataLoader {
                         .subscribe(subscriber);
                 })
                 .pipe(
-                    rxop.publishReplay()
+                    rx.publishReplay()
                 );
 
             this.queue = [observable];
@@ -89,7 +88,7 @@ module.exports = class DataLoader {
 
         return this.queue[0]
             .pipe(
-                rxop.map(({
+                rx.map(({
                     argsCollection,
                     response
                 }) => {
