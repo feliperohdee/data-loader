@@ -3,7 +3,7 @@ const rx = require('./rx');
 module.exports = class DataLoader {
     constructor(loader) {
         if (typeof loader !== 'function') {
-            throw new Error('loader might be a function.');
+            throw new Error('loader must be a function.');
         }
 
         this.argsCollection = [];
