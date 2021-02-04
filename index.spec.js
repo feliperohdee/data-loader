@@ -158,27 +158,27 @@ describe('index.js', () => {
     });
 
     describe('constructor', () => {
-        it('should throw if no loader', () => {
+        it('shoulds throws if no loader', () => {
             expect(() => new DataLoader()).to.throw('loader must be a function.');
         });
 
-        it('should throw if loader is not a function', () => {
+        it('shoulds throws if loader is not a function', () => {
             expect(() => new DataLoader('string')).to.throw('loader must be a function.');
         });
 
-        it('should have a loader', () => {
+        it('shoulds have a loader', () => {
             expect(dataLoader.loader).to.be.a('function');
         });
 
-        it('should have a queue', () => {
+        it('shoulds have a queue', () => {
             expect(dataLoader.queue).to.be.an('array');
         });
 
-        it('should have a cache', () => {
+        it('shoulds have a cache', () => {
             expect(dataLoader.cache).to.be.a('Map');
         });
         
-        it('should have a scheduler', () => {
+        it('shoulds have a scheduler', () => {
             expect(dataLoader.scheduler).to.equal(setImmediate);
         });
     });
@@ -200,28 +200,28 @@ describe('index.js', () => {
             dataLoader.cache.set.restore();
         });
 
-        it('should call buildCacheKey', done => {
+        it('shoulds call buildCacheKey', done => {
             dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
                     expect(dataLoader.buildCacheKey).to.have.been.calledWith(0, 'prefix.');
                 }, null, done);
         });
 
-        it('should consult cache', done => {
+        it('shoulds consult cache', done => {
             dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
                     expect(dataLoader.cache.get).to.have.been.calledWith('prefix.0');
                 }, null, done);
         });
 
-        it('should not consult cache if no args', done => {
+        it('shoulds not consult cache if no args', done => {
             dataLoader.get()
                 .subscribe(() => {
                     expect(dataLoader.cache.get).not.to.have.been.called;
                 }, null, done);
         });
 
-        it('should return', done => {
+        it('shoulds returns', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -234,7 +234,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call loader', done => {
+        it('shoulds call loader', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -249,15 +249,15 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should return different Observables if different keys', () => {
+        it('shoulds returns different Observables if different keys', () => {
             expect(dataLoader.get(0, 'prefix.')).not.to.equal(dataLoader.get(1, 'prefix.'));
         });
 
-        it('should return cached Observables if same key', () => {
+        it('shoulds returns cached Observables if same key', () => {
             expect(dataLoader.get(0, 'prefix.')).to.equal(dataLoader.get(0, 'prefix.'));
         });
 
-        it('should set cache if not exists', done => {
+        it('shoulds set cache if not exists', done => {
             dataLoader.get(0, 'prefix.')
                 .subscribe(() => {
                     expect(dataLoader.cache.set).to.have.been.calledOnce;
@@ -265,14 +265,14 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should not set cache if no args', done => {
+        it('shoulds not set cache if no args', done => {
             dataLoader.get()
                 .subscribe(() => {
                     expect(dataLoader.cache.set).not.to.have.been.called;
                 }, null, done);
         });
 
-        it('should not set cache if exists', done => {
+        it('shoulds not set cache if exists', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -287,7 +287,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call schedule when queue goes from 0 to 1', done => {
+        it('shoulds call schedule when queue goes from 0 to 1', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -300,7 +300,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call dispatch when queue goes from 0 to 1', done => {
+        it('shoulds call dispatch when queue goes from 0 to 1', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -325,7 +325,7 @@ describe('index.js', () => {
             dataLoader.dispatch.restore();
         });
 
-        it('should return', done => {
+        it('shoulds returns', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.merge(dataLoader.multiGet(0)),
@@ -338,14 +338,14 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should return with args array', done => {
+        it('shoulds returns with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
                 }, null, done);
         });
 
-        it('should return with objects args', done => {
+        it('shoulds returns with objects args', done => {
             dataLoader.multiGet({
                     id: 0
                 })
@@ -374,7 +374,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should empty argsCollection', done => {
+        it('shoulds empty argsCollection', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.merge(dataLoader.multiGet(0)),
@@ -387,7 +387,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call loader once', done => {
+        it('shoulds call loader once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.merge(dataLoader.multiGet(0)),
@@ -401,7 +401,7 @@ describe('index.js', () => {
                 }, null, done);
         });
         
-        it('should call loader twice', done => {
+        it('shoulds call loader twice', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.mergeMap(() => {
@@ -416,7 +416,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call loader once with args array', done => {
+        it('shoulds call loader once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(response => {
                     expect(loader).to.have.been.calledOnce;
@@ -424,7 +424,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call schedule once', done => {
+        it('shoulds call schedule once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.merge(dataLoader.multiGet(0)),
@@ -437,14 +437,14 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call schedule once with args array', done => {
+        it('shoulds call schedule once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
                 }, null, done);
         });
 
-        it('should call dispatch once', done => {
+        it('shoulds call dispatch once', done => {
             dataLoader.multiGet(0)
                 .pipe(
                     rx.merge(dataLoader.multiGet(0)),
@@ -457,7 +457,7 @@ describe('index.js', () => {
                 }, null, done);
         });
 
-        it('should call dispatch once with args array', done => {
+        it('shoulds call dispatch once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
                 .subscribe(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
@@ -474,7 +474,7 @@ describe('index.js', () => {
             dataLoader.scheduler.restore();
         });
 
-        it('should call scheduler', () => {
+        it('shoulds call scheduler', () => {
             const fn = () => null;
 
             dataLoader.schedule(fn);
@@ -483,7 +483,7 @@ describe('index.js', () => {
     });
 
     describe('dispatch', () => {
-        it('should call loader one per different item on the queue', done => {
+        it('shoulds call loader one per different item on the queue', done => {
             dataLoader.get(0, 'prefix.')
                 .pipe(
                     rx.merge(dataLoader.get(0, 'prefix.')),
@@ -500,13 +500,13 @@ describe('index.js', () => {
     });
 
     describe('buldCacheKey', () => {
-        it('should build cache key with primitives', () => {
+        it('shoulds build cache key with primitives', () => {
             expect(dataLoader.buildCacheKey(0)).to.equal(0);
             expect(dataLoader.buildCacheKey('string')).to.equal('string');
             expect(dataLoader.buildCacheKey(true)).to.equal(true);
         });
 
-        it('should build cache key with objects', () => {
+        it('shoulds build cache key with objects', () => {
             expect(dataLoader.buildCacheKey(null)).to.equal('null');
             expect(dataLoader.buildCacheKey({
                 id: 0
@@ -515,7 +515,7 @@ describe('index.js', () => {
             }));
         });
 
-        it('should build cache key with prefix', () => {
+        it('shoulds build cache key with prefix', () => {
             expect(dataLoader.buildCacheKey({
                 id: 0
             }, 'prefix.')).to.equal(`prefix.${JSON.stringify({
@@ -529,7 +529,7 @@ describe('index.js', () => {
             getUser.resetHistory();
         });
 
-        it('should call getUser many times', done => {
+        it('shoulds call getUser many times', done => {
             asyncGraph(query(0))
                 .subscribe(null, null, () => {
                     expect(getUser.callCount).to.equal(121);
@@ -537,7 +537,7 @@ describe('index.js', () => {
                 });
         });
 
-        it('should call getUser once per user', done => {
+        it('shoulds call getUser once per user', done => {
             asyncGraph(query(0, true))
                 .subscribe(null, null, () => {
                     expect(getUser.callCount).to.equal(4);
@@ -545,7 +545,7 @@ describe('index.js', () => {
                 });
         });
 
-        it('should handle errors', done => {
+        it('shoulds handle errors', done => {
             asyncGraph(query(4))
                 .subscribe(null, err => {
                     expect(err.message).to.contains('no user id');
@@ -554,7 +554,7 @@ describe('index.js', () => {
         });
 
         describe('many queries', () => {
-            it('should call many times', done => {
+            it('shoulds call many times', done => {
                 asyncGraph(`{
                         u0: user(id: 0, useLoader: false) {
                             name
@@ -587,7 +587,7 @@ describe('index.js', () => {
                     });
             });
 
-            it('should call getUser once per user', done => {
+            it('shoulds call getUser once per user', done => {
                 asyncGraph(`{
                         u0: user(id: 0, useLoader: true) {
                             name
