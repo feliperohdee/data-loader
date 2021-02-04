@@ -159,11 +159,11 @@ describe('index.js', () => {
 
     describe('constructor', () => {
         it('should throw if no loader', () => {
-            expect(() => new DataLoader()).to.throw('loader might be a function.');
+            expect(() => new DataLoader()).to.throw('loader must be a function.');
         });
 
         it('should throw if loader is not a function', () => {
-            expect(() => new DataLoader('string')).to.throw('loader might be a function.');
+            expect(() => new DataLoader('string')).to.throw('loader must be a function.');
         });
 
         it('should have a loader', () => {
