@@ -5,7 +5,6 @@
     "main": "index.js",
     "scripts": {
         "coverage": "rm -rf coverage; NODE_ENV=test nyc ./node_modules/.bin/_mocha *.spec.js --recursive --timeout 5000; rm -rf .nyc_output",
-        "deploy": "npm version patch -m 'Bump %s' && git push origin master && npm publish",
         "eslint": "eslint . --ext .js --config node_modules/eslint-config/index.js",
         "test": "NODE_ENV=test ./node_modules/.bin/_mocha *.spec.js --recursive --timeout 5000"
     },
