@@ -15,6 +15,25 @@ const {
 } = require('graphql');
 
 const rx = require('./rx');
+const testRx = (next, error, complete) => {
+    return response => {
+        try {
+            if (typeof next === 'function') {
+                next(response);
+            }
+            
+            if (typeof complete === 'function') {
+                complete();
+            }
+        } catch (err) {
+            if (typeof error === 'function') {
+                return error(err);
+            }
+
+            throw err;
+        }
+    };
+};
 
 chai.use(sinonChai);
 
@@ -202,23 +221,23 @@ describe('index.js', () => {
 
         it('shoulds call buildCacheKey', done => {
             dataLoader.get(0, 'prefix.')
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.buildCacheKey).to.have.been.calledWith(0, 'prefix.');
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds consult cache', done => {
             dataLoader.get(0, 'prefix.')
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.cache.get).to.have.been.calledWith('prefix.0');
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds not consult cache if no args', done => {
             dataLoader.get()
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.cache.get).not.to.have.been.called;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds returns', done => {
@@ -229,9 +248,9 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call loader', done => {
@@ -242,11 +261,11 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(loader).to.have.been.callCount(2);
                     expect(loader).to.have.been.calledWith(0);
                     expect(loader).to.have.been.calledWith(1);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds returns different Observables if different keys', () => {
@@ -259,17 +278,17 @@ describe('index.js', () => {
 
         it('shoulds set cache if not exists', done => {
             dataLoader.get(0, 'prefix.')
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.cache.set).to.have.been.calledOnce;
                     expect(dataLoader.cache.set).to.have.been.calledWith('prefix.0');
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds not set cache if no args', done => {
             dataLoader.get()
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.cache.set).not.to.have.been.called;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds not set cache if exists', done => {
@@ -280,11 +299,11 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.cache.set).to.have.been.calledTwice;
                     expect(dataLoader.cache.set).to.have.been.calledWith('prefix.0');
                     expect(dataLoader.cache.set).to.have.been.calledWith('prefix.1');
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call schedule when queue goes from 0 to 1', done => {
@@ -295,9 +314,9 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call dispatch when queue goes from 0 to 1', done => {
@@ -308,9 +327,9 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
     });
 
@@ -333,16 +352,16 @@ describe('index.js', () => {
                     rx.merge(dataLoader.multiGet(1)),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds returns with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(response).to.deep.equal([0, 0, 1, 1]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds returns with objects args', done => {
@@ -361,7 +380,7 @@ describe('index.js', () => {
                     })),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(response).to.deep.equal([{
                         id: 0
                     }, {
@@ -371,7 +390,7 @@ describe('index.js', () => {
                     }, {
                         id: 1
                     }]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds empty argsCollection', done => {
@@ -382,9 +401,9 @@ describe('index.js', () => {
                     rx.merge(dataLoader.multiGet(1)),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.argsCollection).to.deep.equal([]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call loader once', done => {
@@ -395,10 +414,10 @@ describe('index.js', () => {
                     rx.merge(dataLoader.multiGet(1)),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(loader).to.have.been.calledOnce;
                     expect(loader).to.have.been.calledWith([0, 1]);
-                }, null, done);
+                }, null, done));
         });
         
         it('shoulds call loader twice', done => {
@@ -409,19 +428,19 @@ describe('index.js', () => {
                     }),
                     rx.toArray()
                 )
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(loader).to.have.been.calledTwice;
                     expect(loader).to.have.been.calledWith([0]);
                     expect(loader).to.have.been.calledWith([1]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call loader once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
-                .subscribe(response => {
+                .subscribe(testRx(response => {
                     expect(loader).to.have.been.calledOnce;
                     expect(loader).to.have.been.calledWith([0, 1]);
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call schedule once', done => {
@@ -432,16 +451,16 @@ describe('index.js', () => {
                     rx.merge(dataLoader.multiGet(1)),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call schedule once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.schedule).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call dispatch once', done => {
@@ -452,16 +471,16 @@ describe('index.js', () => {
                     rx.merge(dataLoader.multiGet(1)),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
 
         it('shoulds call dispatch once with args array', done => {
             dataLoader.multiGet([0, 0, 1, 1])
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(dataLoader.dispatch).to.have.been.calledOnce;
-                }, null, done);
+                }, null, done));
         });
     });
 
@@ -491,11 +510,11 @@ describe('index.js', () => {
                     rx.merge(dataLoader.get(1, 'prefix.')),
                     rx.toArray()
                 )
-                .subscribe(() => {
+                .subscribe(testRx(() => {
                     expect(loader).to.have.been.calledTwice;
                     expect(loader).to.have.been.calledWith(0);
                     expect(loader).to.have.been.calledWith(1);
-                }, null, done);
+                }, null, done));
         });
     });
 
@@ -531,26 +550,25 @@ describe('index.js', () => {
 
         it('shoulds call getUser many times', done => {
             asyncGraph(query(0))
-                .subscribe(null, null, () => {
+                .subscribe(testRx(null, null, () => {
                     expect(getUser.callCount).to.equal(121);
                     done();
-                });
+                }));
         });
 
         it('shoulds call getUser once per user', done => {
             asyncGraph(query(0, true))
-                .subscribe(null, null, () => {
+                .subscribe(testRx(null, null, () => {
                     expect(getUser.callCount).to.equal(4);
                     done();
-                });
+                }));
         });
 
         it('shoulds handle errors', done => {
             asyncGraph(query(4))
-                .subscribe(null, err => {
+                .subscribe(null, testRx(err => {
                     expect(err.message).to.contains('no user id');
-                    done();
-                });
+                }, null, done));
         });
 
         describe('many queries', () => {
@@ -581,10 +599,10 @@ describe('index.js', () => {
                             }
                         }
                     }`)
-                    .subscribe(null, null, () => {
+                    .subscribe(testRx(null, null, () => {
                         expect(getUser.callCount).to.equal(16);
                         done();
-                    });
+                    }));
             });
 
             it('shoulds call getUser once per user', done => {
@@ -614,10 +632,10 @@ describe('index.js', () => {
                             }
                         }
                     }`)
-                    .subscribe(null, null, () => {
+                    .subscribe(testRx(null, null, () => {
                         expect(getUser.callCount).to.equal(4);
                         done();
-                    });
+                    }));
             });
         });
     });
